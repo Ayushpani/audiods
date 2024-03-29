@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}" />
+    <title>FlaskBlog</title>
+  </head>
+  <body>
+    <div class="topnav">
+      <h1>EmotionAI</h1>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#home">About</a>
+        <a href="#home">Statistics</a>
+        <a href="#home">Contact Us</a>
+      </nav>
+    </div>
+    <h1>Upload Audio File</h1>
+    <form
+      id="uploadForm"
+      action="/upload"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+      <input type="file" name="file" id="fileInput" />
+      <button type="submit">Upload</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+      // JavaScript code to handle file upload and display results
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault(); // Prevent default form submission
+
+          // Get file input element
+          var fileInput = document.getElementById("fileInput");
+
+          // Check if a file is selected
+          if (fileInput.files.length > 0) {
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append("file", file);
+
+            // Send file to server using fetch API
+            fetch("/upload", {
+              method: "POST",
+              body: formData,
+            })
+              .then((response) => response.text())
+              .then((data) => {
+                // Display prediction results
+                document.getElementById("results").innerText = data;
+              })
+              .catch((error) => console.error("Error:", error));
+          } else {
+            alert("Please select a file to upload.");
+          }
+        });
+    </script>
+  </body>
+</html>
