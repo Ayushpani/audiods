@@ -1,49 +1,46 @@
-from flask import Flask, render_template, request
+from flask import Flask, request, render_template
+import numpy as np
+import librosa
 from keras.models import load_model
 
 app = Flask(__name__)
-model = load_model('models/lstm.h5')
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# Load your trained model
+MODEL_PATH = 'speech2\models\lstm.h5'  
+model = load_model(MODEL_PATH)
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    global tokenizer
-    # Get uploaded file from request
-    uploaded_file = request.files['file']
-    
-    # Preprocess the uploaded audio file if necessary
-    # For simplicity, let's assume you preprocess the audio into text data
-    # and then use the LSTM model
-    
-    # Convert audio to text (replace this with actual audio preprocessing)
-    audio_text = preprocess_audio(uploaded_file)
-    
-    # Tokenize the text
-    tokenizer.fit_on_texts([audio_text])
-    sequences = tokenizer.texts_to_sequences([audio_text])
-    
-    # Pad sequences to fixed length
-    sequences = sequence.pad_sequences(sequences, maxlen=maxlen)
-    
-    # Make predictions using the LSTM model
-    prediction = model.predict(sequences)
-    
-    # Assuming it's a binary classification task, convert prediction to class label
-    predicted_class = "Happy" if prediction > 0.5 else "Sad"
-    
-    # Return prediction results
-    return f"Prediction: {predicted_class}, Probability: {prediction[0][0]:.4f}"
+# Assuming the same labels and function for MFCC extraction
+label_encoder = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'ps', 'sad']
 
-def preprocess_audio(audio_file):
-    # Placeholder function for audio preprocessing
-    # You need to implement the actual audio preprocessing here
-    # For example, you can use libraries like librosa to extract features
-    # from the audio file (e.g., spectrograms or MFCC features)
-    # For simplicity, let's assume this function converts audio to text
-    return "This is an example audio text."
+def extract_mfcc(file_path):
+    y, sr = librosa.load(file_path, duration=3, offset=0.5)
+    mfcc = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
+    return mfcc
+
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # Check if a file is provided
+        if 'file' not in request.files:
+            return render_template('upload.html', prediction="No file selected")
+        file = request.files['file']
+        if file.filename == '':
+            return render_template('upload.html', prediction="No file selected")
+        
+        # If the user provides a file
+        if file:
+            # Save the file temporarily
+            file_path = "temp.wav"
+            file.save(file_path)
+            
+            # Extract MFCC features and predict sentiment
+            mfcc_features = extract_mfcc(file_path)
+            mfcc_features_reshaped = np.expand_dims(np.expand_dims(mfcc_features, axis=0), axis=-1)
+            predictions = model.predict(mfcc_features_reshaped)
+            predicted_sentiment = label_encoder[np.argmax(predictions)]
+            
+            return render_template('upload.html', prediction=predicted_sentiment)
+    return render_template('upload.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

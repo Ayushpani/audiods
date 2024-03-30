@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <title>Speech Emotion Recognition</title>
+    <title>Prediction Result</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,14 +55,10 @@
             right: 600px; /* Adjust as needed */
         }
     </style>
-
 </head>
 <body>
-    <h2>Upload Audio File</h2>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
-    </form>
-    <img class ="illust"src="C:\Users\akshata\OneDrive\Documents\IT Notes\audios\speech2\templates\Speech to text-amico.png" alt="Speech Emotion Recognition">
+    <h2>Prediction Result:</h2>
+    <p>{{ prediction }}</p>
+    <a href="/">Try another file</a>
 </body>
 </html>
